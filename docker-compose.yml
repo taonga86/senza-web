@@ -1,0 +1,39 @@
+version: '3.3'
+
+services:
+
+  wordpress:
+    image: wordpress
+    depends_on: 
+      - db
+    restart: always
+    ports:
+      - 8080:80
+    environment:
+      WORDPRESS_DB_HOST: db
+      WORDPRESS_DB_USER: senza_root
+      WORDPRESS_DB_PASSWORD: senza_r_pass
+      WORDPRESS_DB_NAME: wp_senza
+    volumes:
+    - wordpress:/var/www/html
+    - ./plugins/woographql:/var/www/html/wp-content/plugins/woographql
+    - ./plugins/wp-graphql-acf-master:/var/www/html/wp-content/plugins/wp-graphql-acf-master
+    - ./plugins/senza-app:/var/www/html/wp-content/plugins/senza-app
+  
+
+  db:
+    image: mysql:5.7
+    restart: always
+    environment:
+      MYSQL_DATABASE: wp_senza
+      MYSQL_USER: senza_root
+      MYSQL_PASSWORD: senza_r_pass
+      MYSQL_RANDOM_ROOT_PASSWORD: '1'
+    volumes:
+      - db:/var/lib/mysql
+    ports: 
+      - "3306:3306"
+
+volumes:
+  wordpress:
+  db:
