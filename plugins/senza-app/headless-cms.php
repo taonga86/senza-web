@@ -2,15 +2,15 @@
 /**
  * Plugin Name: Senza app
  * Description: A WordPress plugin that adds features to use WordPress as a headless CMS with any front-end environment using REST API
- * Plugin URI:  https://codeytek.com/headless-cms-wordpress-plugin
- * Author:      Imran Sayed
- * Author URI:  https://codeytek.com
+ * Plugin URI:  https://ecovisuel.ch
+ * Author:      Taonga Banda
+ * Author URI:  Ecovisuel
  * License:     GPL2
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Version:     2.0.0
- * Text Domain: headless-cms
+ * Text Domain: ecovisuel-headless-wordpress
  *
- * @package headless-cms
+ * @package ecovisuel-headless-wordpress
  */
 
 define( 'HEADLESS_CMS_PATH', untrailingslashit( plugin_dir_path( __FILE__ ) ) );
@@ -34,3 +34,74 @@ function headless_cms_features_plugin_loader() {
 }
 
 headless_cms_features_plugin_loader();
+
+function add_subscriptions_menu() {
+    add_submenu_page('woocommerce','Subscriptions','Subscriptions', 'manage_options', 'edit.php?post_type=subscription');
+}
+
+// Change the 30 to customise item's order within WooCommerce submenu.
+add_action( 'admin_menu', 'add_subscriptions_menu', 30 );
+
+define('GRAPHQL_JWT_AUTH_SECRET_KEY','>)c/9M~lr4}~kscK_0r9X5q~q2GjKRslox*4/VSG+ c+3ZgtZomRv:^r^_:^;%JX');
+define('JWT_AUTH_SECRET_KEY', 'a1*@:VH[2T9RuH2aKC`uC`X 3ApkCP{-A-y*5)|29fFBRFH[0PcgQ_Nx?FCKR1-d');
+	define('JWT_AUTH_CORS_ENABLE', true);
+////
+
+
+use WPGraphQL\AppContext;
+use WPGraphQL\Model\Subscription;
+
+
+// the important part for ACF mutations specifically and also in general for input actions.
+// adds the input fields for the ACF fields to add, or just general fields you would want to add.
+add_action( 'graphql_input_fields', function ( $fields, $type_name, $config ) {
+	//todo also create user input requires this
+	if ( $type_name === 'CreateSubscriptionInput' ) {
+		$fields = array_merge( $fields, [
+			//  add the fields to the input element of the update user input type.
+			'userId'   => [ 'type' => 'String' ],
+			'orderFreq' => [ 'type' => 'Number' ],
+			'pickUpDay'  => [ 'type' => 'Number' ],
+			'items'  => [ 'type' => 'String' ],
+		] );
+	}
+	// todo create and update
+	// this type name can be found by looking at what type of input is given in mutations on graphql
+	if ( $type_name === 'UpdateSubscriptionInput' ) {
+		$fields = array_merge( $fields, [
+			//  add the fields to the input element of the update user input type.
+			// simple string created in ACF
+			'userId'   => [ 'type' => 'String' ],
+			'orderFreq' => [ 'type' => 'Number' ],
+			'pickUpDay'  => [ 'type' => 'Number' ],
+			'items'  => [ 'type' => 'String' ],
+		] );
+	}
+
+	return $fields;
+}, 20, 3 );
+
+// what happens when mutation contains any of the input fields when mutating user info, todo check if create works
+add_action( 'graphql_subscription_object_mutation_update_additional_data', function ( $user_id, $input, $mutation_name, $context, $info ) {
+	if ( isset( $input['userId'] ) ) {
+		// Consider other sanitization if necessary and validation such as which
+		// user role/capability should be able to insert this value, etc.
+		update_user_meta( $user_id, 'userId', $input['userId'] );
+	}
+	if ( isset( $input['orderFreq'] ) ) {
+		// Consider other sanitization if necessary and validation such as which
+		// user role/capability should be able to insert this value, etc.
+		update_user_meta( $user_id, 'orderFreq', $input['orderFreq'] );
+	}
+	if ( isset( $input['pickUpDay'] ) ) {
+		// Consider other sanitization if necessary and validation such as which
+		// user role/capability should be able to insert this value, etc.
+		update_user_meta( $user_id, 'pickUpDay', $input['pickUpDay'] );
+	}
+	if ( isset( $input['items'] ) ) {
+		// Consider other sanitization if necessary and validation such as which
+		// user role/capability should be able to insert this value, etc.
+		update_user_meta( $user_id, 'items', $input['items'] );
+	}
+}, 10, 5 );
+
